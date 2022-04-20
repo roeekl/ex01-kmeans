@@ -172,7 +172,7 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
 {
     size_t i, j;
     size_t cluster;
-    double delta = .0;
+    double delta = .0, centroid_delta;
 
     point_t *new_centroids = calloc(k, sizeof(point_t));
     double *axis_sum = calloc(dim * k, sizeof(double));
@@ -187,7 +187,12 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
     }
     for (i = 0; i < k; i++)
     {
-        delta = fmax(delta, calc_distance(clusters[i].centroid, new_centroids[i]));
+
+        centroid_delta = calc_distance(clusters[i].centroid, new_centroids[i]);
+        if (centroid_delta > delta)
+        {
+            delta = centroid_delta;
+        }
 
         for (j = 0; j < dim; j++)
         {
