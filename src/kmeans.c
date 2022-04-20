@@ -8,6 +8,10 @@
 #define EPSILON 0.01
 #define DEFAULT_ITER 200
 #define PRINT_ITERS
+#define INVALID_INPUT_ERR "Invalid Input!\n"
+#define GENERAL_ERR "Invalid Input!\n"
+#define FUNC_SUCCESS 0
+
 size_t dim;
 
 typedef struct point
@@ -99,7 +103,7 @@ int write_points(char *filename, cluster_t *clusters, size_t points_len)
         fprintf(points_file, "\n");
     }
     fclose(points_file);
-    return EXIT_SUCCESS;
+    return FUNC_SUCCESS;
 }
 
 int initialize_clusters(cluster_t **clusters, size_t k, point_t *points)
@@ -122,7 +126,7 @@ int initialize_clusters(cluster_t **clusters, size_t k, point_t *points)
         (*clusters)[i].centroid.values = &values[(i * dim)];
     }
 
-    return 0;
+    return FUNC_SUCCESS;
 }
 double calc_distance(point_t a, point_t b)
 {
@@ -163,6 +167,7 @@ int assign_to_clusters(clustered_point_t *points, size_t points_len, cluster_t *
     }
     return 0;
 }
+
 double update_centroids(clustered_point_t *points, size_t points_len, cluster_t *clusters, size_t k)
 {
     size_t i, j;
@@ -194,6 +199,7 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
     free(new_centroids);
     return delta;
 }
+
 int kmeans(point_t *points, size_t points_len, cluster_t *clusters, size_t k, size_t max_iter)
 {
     size_t i;
@@ -212,13 +218,12 @@ int kmeans(point_t *points, size_t points_len, cluster_t *clusters, size_t k, si
         max_delta = update_centroids(clustered_points, points_len, clusters, k);
         if (max_delta <= EPSILON)
         {
-            printf("EPSILON. Iteration:%lu\n", i);
             break;
         }
     }
 
     free(clustered_points);
-    return 0;
+    return FUNC_SUCCESS;
 }
 int main(int argc, char *argv[])
 {
@@ -227,21 +232,32 @@ int main(int argc, char *argv[])
     point_t *points;
     cluster_t *clusters;
     size_t points_len = 0;
-    if (argc < 4)
+    k = atoi(argv[1]);
+    if (k <= 0)
     {
+        printf(GENERAL_ERR);
         exit(1);
     }
-    k = atoi(argv[1]);
-    if (argc > 4)
+    if (argc == 5)
     {
         max_iter = atoi(argv[2]);
+        if (max_iter <= 0)
+        {
+            printf(GENERAL_ERR);
+            exit(1);
+        }
         input_file = argv[3];
         output_file = argv[4];
     }
-    else
+    else if (argc == 4)
     {
         input_file = argv[2];
         output_file = argv[3];
+    }
+    else
+    {
+        printf(INVALID_INPUT_ERR);
+        exit(1);
     }
     dim = get_dimension(input_file);
     points_len = get_points(input_file, &points);

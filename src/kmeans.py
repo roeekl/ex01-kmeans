@@ -1,121 +1,127 @@
-from fileinput import filename
-from msilib.schema import File
-import string
 import math
-import random
 import sys
-import argparse
-from tokenize import String
-from turtle import distance
-from typing import List
-from unittest.mock import DEFAULT
+from typing import List, Tuple
 
-EPSILON=0.001
-DEFAULT_ITER=600
+EPSILON = 0.001
+DEFAULT_ITER = 600
+INVALID_INPUT_MESSAGE = "Invalid Input!"
+GENERAL_ERROR_MESSAGE = "An Error Has Occurred"
 
-def get_points(filename:string)->list:
-    with open(filename,'r') as points_file:
-         floats_array=[]
-         temp_array=[]
-         points_array=points_file.readlines()
-         result = [x[:-1] for x in points_array]
-         for point in result:
-            coordinates=point.split(",")
+
+def get_points(filename: str) -> List[List[float]]:
+    with open(filename, "r") as points_file:
+        floats_array = []
+        temp_array = []
+        points_array = points_file.readlines()
+        result = [x[:-1] for x in points_array]
+        for point in result:
+            coordinates = point.split(",")
             for coord in coordinates:
                 temp_array.append(float(coord))
             floats_array.append(temp_array)
-            temp_array=[]    
-         return floats_array
+            temp_array = []
+        return floats_array
 
-def K_algorithm(points_array:float,centorids_array:float,max_iter:int,dim:int)->List:
-    min=sys.maxsize
-    i=0
-    distance=0
-    balanced=False
-    for iter in range(0,max_iter):
-        centroids_distances_array=[[] for _ in range(len(centorids_array))]
+
+def kmeans(
+    points_array: float, centorids_array: float, max_iter: int, dim: int
+) -> List[float]:
+    min = sys.maxsize
+    i = 0
+    distance = 0
+    for _ in range(0, max_iter):
+        centroids_distances_array = [[] for _ in range(len(centorids_array))]
         for point in points_array:
             for centroid in centorids_array:
-                distance=calculate_distance(point,centroid,dim)
-                if(distance<min):
-                    min=distance
-                    index=i
-                i+=1
+                distance = calculate_distance(point, centroid)
+                if distance < min:
+                    min = distance
+                    index = i
+                i += 1
             centroids_distances_array[index].append(point)
-            min=sys.maxsize
-            i=0
-        centorids_array=calculate_avarge_distance(centroids_distances_array,centorids_array,dim)
+            min = sys.maxsize
+            i = 0
+        centorids_array, centroids_delta = calculate_avarge_distance(
+            centroids_distances_array, centorids_array, dim
+        )
+        if centroids_delta < EPSILON:
+            break
     return centorids_array
 
-def calculate_distance(point:list,centroid:list,dim:int)->float:
-    sum=0.0
-    for cord in range(0,dim):
-        sum+=math.pow(abs(point[cord]-centroid[cord]),2)
-    distance=math.sqrt(sum)
+
+def calculate_distance(point: list, centroid: list) -> float:
+    sum = 0.0
+    for v1, v2 in zip(point, centroid):
+        sum += math.pow(abs(v1 - v2), 2)
+    distance = math.sqrt(sum)
     return distance
 
-def calculate_avarge_distance(centroids_distances_array,centroids_array,dim:int)->list:
-    Index=0
-    num_of_points=1
+
+def calculate_avarge_distance(
+    centroids_distances_array, centroids_array, dim: int
+) -> Tuple[List[float], float]:
+    num_of_points = 1
+    result_centroids = []
     for centroid in centroids_distances_array:
-        centroids_new_locations=[0 for i in range(dim)]
-        num_of_points=len(centroid)
-        if num_of_points==0:continue
+        centroids_new_locations = [0 for i in range(dim)]
+        num_of_points = len(centroid)
+        if num_of_points == 0:
+            continue
         for point in centroid:
-            i=0
+            i = 0
             for coord in point:
-                centroids_new_locations[i]+=coord
-                i+=1
+                centroids_new_locations[i] += coord
+                i += 1
         for j in range(dim):
-            centroids_new_locations[j]=centroids_new_locations[j]/num_of_points
-        if calculate_distance(centroids_new_locations,centroids_array[Index],dim)>EPSILON:
-            centroids_array[Index]=centroids_new_locations
-        Index+=1
-    
-    return centroids_array
-                
-def write_points(centroids_array:List):
-     f = open("centroids_file.txt", "w")
-     for centroid in centroids_array:
-         f.write(",".join(["%.f4".format(v) for v in centroid])+"\n")
-     f.close
+            centroids_new_locations[j] = centroids_new_locations[j] / num_of_points
+        result_centroids.append(centroids_new_locations)
+
+    max_delta = max(
+        [
+            calculate_distance(c1, c2)
+            for c1, c2 in zip(centroids_array, result_centroids)
+        ]
+    )
+    return result_centroids, max_delta
 
 
+def write_points(output_file: str, centroids_array: List[List[float]]):
+    with open(output_file, mode="w") as output_f:
+        for centroid in centroids_array:
+            output_f.write(",".join([f"{v:.4f}" for v in centroid]) + "\n")
+
+
+def get_positive_int(input: str) -> int:
+    try:
+        result = int(input)
+        if result <= 0:
+            raise ValueError()
+    except ValueError:
+        print(GENERAL_ERROR_MESSAGE)
+        exit()
 
 
 def main():
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument("K", type=int, help="Number of centroids - integer >=1")
-    #if len(sys.argv) == 3:
-    #    parser.add_argument("MAX_ITER", type=int, help="Maximum number of iterations to reach convergence - integer >=1")
-    #elif len(sys.argv) == 2:
-    max_iter = DEFAULT_ITER
-    #else:
-    #    print("Invalid Input!")
-    #    exit(1)
-    #args = parser.parse_args()
-    #K = args[0]
-    #if len(sys.argv) == 3:
-    #     max_iter = args[1]
-    #check = False
-    #if K < 1:
-    #    print("Invalid Input!")
-    #    check = True
-    #if max_iter < 1:
-    #    print("Invalid Input!")
-    #    check = True
-    #if check:
-    #    exit(1)
-    points_array=get_points("./resources/input_3.txt")
-    dim=len(points_array[0])
-    k=15
-    centorids_array=random.sample(points_array,k)
-    centorids_array=K_algorithm(points_array,centorids_array,max_iter,dim)
-    #output_File = open("output.txt", "w") 
-    #write_points(centorids_array)
-    for v in centorids_array:
-        v = ['{:.4f}'.format(x) for x in v]
-        print(','.join(v))
-    return 0
-main()
+    args = sys.argv[1:]
+    k = get_positive_int(args[0])
+    if len(args) == 3:
+        max_iter = DEFAULT_ITER
+        input_path = args[1]
+        output_path = args[2]
+    elif len(args) == 4:
+        max_iter = get_positive_int(args[1])
+        input_path = args[2]
+        output_path = args[3]
+    else:
+        print(INVALID_INPUT_MESSAGE)
+        exit()
+    points = get_points(input_path)
 
+    dim = len(points[0])
+    centorids = points[:k]
+    centorids = kmeans(points, centorids, max_iter, dim)
+    write_points(output_path, centorids)
+
+
+if __name__ == "__main__":
+    main()
