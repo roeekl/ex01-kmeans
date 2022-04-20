@@ -99,6 +99,7 @@ def get_positive_int(input: str) -> int:
     except ValueError:
         print(GENERAL_ERROR_MESSAGE)
         exit()
+    return result
 
 
 def main():
