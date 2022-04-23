@@ -176,6 +176,9 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
 
     point_t *new_centroids = (point_t *)calloc(k, sizeof(point_t));
     double *axis_sum = (double *)calloc(dim * k, sizeof(double));
+    if (NULL == new_centroids || NULL == axis_sum){
+        return 1;
+    }
     for (i = 0; i < points_len; i++)
     {
         cluster = points[i].cluster;
@@ -200,7 +203,6 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
         }
         clusters[i].size = 0;
     }
-    free(axis_sum);
     free(new_centroids);
     return delta;
 }
