@@ -174,8 +174,8 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
     size_t cluster;
     double delta = .0, centroid_delta;
 
-    point_t *new_centroids = calloc(k, sizeof(point_t));
-    double *axis_sum = calloc(dim * k, sizeof(double));
+    point_t *new_centroids = (point_t *)calloc(k, sizeof(point_t));
+    double *axis_sum = (double *)calloc(dim * k, sizeof(double));
     for (i = 0; i < points_len; i++)
     {
         cluster = points[i].cluster;
@@ -211,7 +211,7 @@ int kmeans(point_t *points, size_t points_len, cluster_t *clusters, size_t k, si
     clustered_point_t *clustered_points;
     double max_delta;
 
-    clustered_points = malloc(sizeof(clustered_point_t) * points_len);
+    clustered_points = (clustered_point_t *)malloc(sizeof(clustered_point_t) * points_len);
     for (i = 0; i < points_len; i++)
     {
         clustered_points[i].point = points[i];
