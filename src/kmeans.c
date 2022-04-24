@@ -60,6 +60,7 @@ size_t get_lines_count(char *filename)
             lines++;
         }
     }
+    fclose(points_file);
     return lines;
 }
 int get_points(char *filename, point_t **points)
@@ -188,8 +189,12 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
         {
             axis_sum[cluster * dim + j] += points[i].point.values[j] / clusters[cluster].size;
         }
+    }
+    for (i = 0; i < k; i++)
+    {
         new_centroids[i].values = &axis_sum[i * dim];
     }
+
     for (i = 0; i < k; i++)
     {
 
@@ -205,6 +210,7 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
         }
         clusters[i].size = 0;
     }
+    free(axis_sum);
     free(new_centroids);
     return delta;
 }
@@ -230,7 +236,6 @@ int kmeans(point_t *points, size_t points_len, cluster_t *clusters, size_t k, si
             break;
         }
     }
-
     free(clustered_points);
     return FUNC_SUCCESS;
 }
