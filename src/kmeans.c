@@ -81,6 +81,7 @@ int get_points(char *filename, point_t **points)
         (*points)[i].values = &values[i * dim];
         fseek(points_file, 1, SEEK_CUR);
     }
+    fclose(points_file);
     return points_len;
 }
 
@@ -176,7 +177,8 @@ double update_centroids(clustered_point_t *points, size_t points_len, cluster_t 
 
     point_t *new_centroids = (point_t *)calloc(k, sizeof(point_t));
     double *axis_sum = (double *)calloc(dim * k, sizeof(double));
-    if (NULL == new_centroids || NULL == axis_sum){
+    if (NULL == new_centroids || NULL == axis_sum)
+    {
         return 1;
     }
     for (i = 0; i < points_len; i++)
